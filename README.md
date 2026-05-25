@@ -1,0 +1,1 @@
+# bravo_mobile_inventory_odoo19
