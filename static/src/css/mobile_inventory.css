@@ -84,3 +84,14 @@ h3 { font-size: 17px; margin: 0 0 8px; }
     .buttons { flex-direction: column; }
     .topbar h1 { font-size: 25px; }
 }
+
+.scan-input-row { display: flex; gap: 8px; align-items: stretch; }
+.scan-input-row .barcode { min-width: 0; flex: 1; }
+.btn.clear { width: 56px; min-width: 56px; padding: 0; font-size: 32px; line-height: 1; background: #fff; border-color: #bcc7be; color: var(--muted); }
+.scan-action { margin-top: 10px; }
+.scan-hint { margin: 10px 0 0; }
+
+.ui-status { margin: 4px 0 0; font-size: 12px; font-weight: 600; }
+.ui-error { color: var(--red); }
+.ui-ready { color: var(--green-dark); }
+.busy-label { opacity: .72; }

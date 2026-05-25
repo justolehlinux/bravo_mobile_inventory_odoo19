@@ -4,17 +4,29 @@
     const app = document.getElementById('bmi-app');
     if (!app) return;
 
-    const canBind = app.dataset.canBind === '1';
+    const UI_VERSION = '19.0.1.0.3';
+
+    let canBind = app.dataset.canBind === '1';
     const canApply = app.dataset.canApply === '1';
-    const state = { sessionId: null, sessionName: '', location: '', activeLine: null, unknownLine: null, recent: [] };
+    const state = { sessionId: null, sessionName: '', location: '', activeLine: null, unknownLine: null, recent: [], scanBusy: false, scanTimer: null, productSearchTimer: null };
     const $ = (id) => document.getElementById(id);
+
+    const jsStatus = $('js-status');
+    if (jsStatus) {
+        jsStatus.textContent = `Интерфейс загружен · v${UI_VERSION}`;
+        jsStatus.className = 'ui-status ui-ready';
+    }
 
     async function rpc(route, params = {}) {
         const response = await fetch(route, {
             method: 'POST',
+            cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params, id: Date.now() }),
         });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: запрос не выполнен`);
+        }
         const payload = await response.json();
         if (payload.error) {
             const msg = payload.error.data?.message || payload.error.message || 'Ошибка сервера';
@@ -46,8 +58,15 @@
         hide('product-panel', 'unknown-panel', 'bind-panel');
         $('counted-input').value = '';
     }
-    function focusBarcode() {
+    function focusBarcode(clear = true) {
+        if (clear) $('barcode-input').value = '';
+        $('barcode-input').focus();
+    }
+
+    function clearBarcode() {
+        clearTimeout(state.scanTimer);
         $('barcode-input').value = '';
+        resetItemPanels();
         $('barcode-input').focus();
     }
     function recent(label) {
@@ -99,15 +118,23 @@
 
     async function scan() {
         const barcode = $('barcode-input').value.trim();
-        if (!barcode) return;
+        if (!barcode || state.scanBusy) return;
+        clearTimeout(state.scanTimer);
+        state.scanBusy = true;
+        const scanBtn = $('scan-btn');
+        const previousText = scanBtn.textContent;
+        scanBtn.disabled = true;
+        scanBtn.textContent = 'Ищу…';
         try {
             const out = await rpc('/mobile/inventory/scan', { session_id: state.sessionId, barcode });
             if (!out.success) return error(out.message);
             if (out.status === 'not_found') {
                 resetItemPanels();
                 state.unknownLine = out.line;
+                canBind = Boolean(out.can_bind);
                 $('unknown-barcode').textContent = out.line.barcode;
                 $('bind-open-btn').classList.toggle('hidden', !canBind);
+                $('bind-permission-hint').classList.toggle('hidden', canBind);
                 show('unknown-panel');
                 return;
             }
@@ -128,6 +155,11 @@
             $('save-qty-btn').disabled = false;
             fillProduct(out);
         } catch (e) { error(e.message); }
+        finally {
+            state.scanBusy = false;
+            scanBtn.disabled = false;
+            scanBtn.textContent = previousText;
+        }
     }
 
     async function saveQty() {
@@ -173,6 +205,11 @@
 
     async function searchProducts() {
         const query = $('product-search-input').value.trim();
+        if (query.length < 2) return error('Введите минимум 2 символа для поиска товара.');
+        const searchBtn = $('product-search-btn');
+        const previousText = searchBtn.textContent;
+        searchBtn.disabled = true;
+        searchBtn.textContent = 'Ищу…';
         try {
             const out = await rpc('/mobile/inventory/search_product', { query });
             const root = $('product-results');
@@ -199,6 +236,10 @@
                 root.appendChild(item);
             });
         } catch (e) { error(e.message); }
+        finally {
+            searchBtn.disabled = false;
+            searchBtn.textContent = previousText;
+        }
     }
 
     async function bindBarcode(product) {
@@ -313,7 +354,15 @@
     }
 
     $('start-btn').addEventListener('click', start);
+    $('scan-btn').addEventListener('click', scan);
+    $('clear-barcode-btn').addEventListener('click', clearBarcode);
     $('barcode-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); scan(); } });
+    $('barcode-input').addEventListener('input', () => {
+        clearTimeout(state.scanTimer);
+        const value = $('barcode-input').value.trim();
+        // Автопоиск работает и для кодов с буквами/пробелами; Enter и кнопка остаются резервом.
+        if (value.length >= 3) state.scanTimer = setTimeout(scan, 450);
+    });
     $('counted-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveQty(); } });
     $('save-qty-btn').addEventListener('click', saveQty);
     $('minus-btn').addEventListener('click', () => adjustQty(-1));
@@ -324,6 +373,12 @@
     $('bind-back-btn').addEventListener('click', () => { hide('bind-panel'); show('unknown-panel'); });
     $('product-search-btn').addEventListener('click', searchProducts);
     $('product-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchProducts(); } });
+    $('product-search-input').addEventListener('input', () => {
+        clearTimeout(state.productSearchTimer);
+        if ($('product-search-input').value.trim().length >= 2) {
+            state.productSearchTimer = setTimeout(searchProducts, 300);
+        }
+    });
     $('finish-btn').addEventListener('click', finish);
     $('back-count-btn').addEventListener('click', reopenCount);
     $('preview-btn').addEventListener('click', preview);

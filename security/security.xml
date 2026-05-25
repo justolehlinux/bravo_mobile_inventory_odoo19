@@ -5,9 +5,16 @@
         <field name="sequence">35</field>
     </record>
 
-    <record id="group_bravo_inventory_barcode_binder" model="res.groups">
-        <field name="name">Bind Product Barcodes from Mobile Inventory</field>
+    <record id="privilege_bravo_mobile_inventory" model="res.groups.privilege">
+        <field name="name">Mobile Inventory</field>
         <field name="category_id" ref="module_category_bravo_inventory"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="group_bravo_inventory_barcode_binder" model="res.groups">
+        <field name="name">Bind Product Barcodes</field>
+        <field name="privilege_id" ref="privilege_bravo_mobile_inventory"/>
+        <field name="sequence">10</field>
         <field name="implied_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
     </record>
 

@@ -6,8 +6,8 @@
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
                 <title>Bravo — Инвентаризация</title>
-                <link rel="stylesheet" type="text/css" href="/bravo_mobile_inventory/static/src/css/mobile_inventory.css"/>
-                <script type="text/javascript" src="/bravo_mobile_inventory/static/src/js/mobile_inventory.js" defer="defer"></script>
+                <link rel="stylesheet" type="text/css" href="/bravo_mobile_inventory/static/src/css/mobile_inventory.css?v=19.0.1.0.3"/>
+                <script type="text/javascript" src="/bravo_mobile_inventory/static/src/js/mobile_inventory.js?v=19.0.1.0.3" defer="defer"></script>
             </head>
             <body>
                 <main id="bmi-app"
@@ -15,7 +15,8 @@
                       t-att-data-can-apply="'1' if can_apply else '0'">
                     <header class="topbar">
                         <h1>Инвентаризация</h1>
-                        <p id="session-label" class="muted">Bravo Mobile Inventory</p>
+                        <p id="session-label" class="muted">Bravo Mobile Inventory · v19.0.1.0.3</p>
+                        <p id="js-status" class="ui-status ui-error">Интерфейс JS не запущен. Перезагрузите страницу после обновления модуля.</p>
                     </header>
 
                     <section id="screen-start" class="screen active">
@@ -28,19 +29,24 @@
                                 </t>
                             </select>
                             <p class="hint">Считается только выбранная локация, без дочерних полок и зон.</p>
-                            <button id="start-btn" class="btn primary wide">Начать подсчёт</button>
+                            <button id="start-btn" type="button" class="btn primary wide">Начать подсчёт</button>
                         </div>
                     </section>
 
                     <section id="screen-count" class="screen">
                         <div class="session-row">
                             <strong id="count-location"></strong>
-                            <button id="cancel-btn" class="btn ghost small">Отменить</button>
+                            <button id="cancel-btn" type="button" class="btn ghost small">Отменить</button>
                         </div>
                         <div id="toast" class="toast hidden"></div>
                         <div class="card scan-card">
                             <label class="label" for="barcode-input">Скан штрихкода</label>
-                            <input id="barcode-input" class="input barcode" type="text" inputmode="numeric" autocomplete="off" placeholder="Отсканируйте товар"/>
+                            <div class="scan-input-row">
+                                <input id="barcode-input" class="input barcode" type="text" inputmode="numeric" autocomplete="off" placeholder="Отсканируйте товар"/>
+                                <button id="clear-barcode-btn" class="btn clear" type="button" aria-label="Очистить штрихкод">×</button>
+                            </div>
+                            <button id="scan-btn" class="btn primary wide scan-action" type="button">Найти товар</button>
+                            <p class="hint scan-hint">Сканер ищет автоматически. Кнопка нужна для ручного ввода.</p>
                         </div>
 
                         <div id="product-panel" class="card hidden">
@@ -50,13 +56,13 @@
                             <div class="qty-current">На руках: <strong id="theoretical-qty">0</strong></div>
                             <label class="label" for="counted-input">Посчитано</label>
                             <div class="qty-row">
-                                <button id="minus-btn" class="btn quantity">−</button>
+                                <button id="minus-btn" type="button" class="btn quantity">−</button>
                                 <input id="counted-input" class="input counted" type="number" min="0" step="any" placeholder="Enter = оставить как есть"/>
-                                <button id="plus-btn" class="btn quantity">+</button>
+                                <button id="plus-btn" type="button" class="btn quantity">+</button>
                             </div>
                             <div class="buttons">
-                                <button id="save-qty-btn" class="btn primary">Сохранить</button>
-                                <button id="skip-btn" class="btn secondary">Пропустить</button>
+                                <button id="save-qty-btn" type="button" class="btn primary">Сохранить</button>
+                                <button id="skip-btn" type="button" class="btn secondary">Пропустить</button>
                             </div>
                         </div>
 
@@ -64,25 +70,26 @@
                             <h2>Штрихкод не найден</h2>
                             <p id="unknown-barcode" class="barcode-value"></p>
                             <div class="buttons">
-                                <button id="bind-open-btn" class="btn primary hidden">Привязать к товару</button>
-                                <button id="unknown-skip-btn" class="btn secondary">Пропустить</button>
+                                <button id="bind-open-btn" type="button" class="btn primary hidden">Привязать к товару</button>
+                                <button id="unknown-skip-btn" type="button" class="btn secondary">Пропустить</button>
                             </div>
+                            <p id="bind-permission-hint" class="hint hidden">Привязка доступна менеджеру склада или пользователю с правом Bind Product Barcodes.</p>
                         </div>
 
                         <div id="bind-panel" class="card hidden">
                             <h2>Привязать штрихкод</h2>
                             <p id="bind-barcode" class="barcode-value"></p>
                             <input id="product-search-input" class="input" type="search" placeholder="Название или код товара"/>
-                            <button id="product-search-btn" class="btn secondary wide">Найти товар</button>
+                            <button id="product-search-btn" type="button" class="btn secondary wide">Найти товар</button>
                             <div id="product-results" class="results"></div>
-                            <button id="bind-back-btn" class="btn ghost wide">Назад</button>
+                            <button id="bind-back-btn" type="button" class="btn ghost wide">Назад</button>
                         </div>
 
                         <div class="card history-card">
                             <h2>Последние сканы</h2>
                             <div id="recent-lines" class="history muted">Пока ничего не сохранено.</div>
                         </div>
-                        <button id="finish-btn" class="btn primary wide finish">Завершить подсчёт</button>
+                        <button id="finish-btn" type="button" class="btn primary wide finish">Завершить подсчёт</button>
                     </section>
 
                     <section id="screen-review" class="screen">
@@ -98,8 +105,8 @@
                         </div>
                         <div id="bound-summary" class="card hidden"></div>
                         <div class="buttons stacked">
-                            <button id="back-count-btn" class="btn secondary wide">Назад к сканированию</button>
-                            <button id="preview-btn" class="btn primary wide">Проверить применение</button>
+                            <button id="back-count-btn" type="button" class="btn secondary wide">Назад к сканированию</button>
+                            <button id="preview-btn" type="button" class="btn primary wide">Проверить применение</button>
                         </div>
                     </section>
 
@@ -110,8 +117,8 @@
                         </div>
                         <div id="preview-lines"></div>
                         <div class="buttons stacked">
-                            <button id="preview-back-btn" class="btn secondary wide">Назад к итогу</button>
-                            <button id="apply-btn" class="btn danger wide hidden">Применить корректировку</button>
+                            <button id="preview-back-btn" type="button" class="btn secondary wide">Назад к итогу</button>
+                            <button id="apply-btn" type="button" class="btn danger wide hidden">Применить корректировку</button>
                         </div>
                     </section>
                 </main>

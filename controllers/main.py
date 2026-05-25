@@ -17,9 +17,7 @@ class BravoMobileInventoryController(http.Controller):
         ], order='complete_name')
         return request.render('bravo_mobile_inventory.mobile_inventory_page', {
             'locations': locations,
-            'can_bind': request.env.user.has_group(
-                'bravo_mobile_inventory.group_bravo_inventory_barcode_binder'
-            ),
+            'can_bind': self._can_bind(),
             'can_apply': request.env.user.has_group('stock.group_stock_manager'),
         })
 
@@ -29,12 +27,17 @@ class BravoMobileInventoryController(http.Controller):
         if not request.env.user.has_group('stock.group_stock_user'):
             raise AccessError(_('You do not have access to mobile inventory.'))
 
+    def _can_bind(self):
+        user = request.env.user
+        return (
+            user.has_group('stock.group_stock_manager')
+            or user.has_group('bravo_mobile_inventory.group_bravo_inventory_barcode_binder')
+        )
+
     def _require_binder(self):
         self._require_stock_user()
-        if not request.env.user.has_group(
-            'bravo_mobile_inventory.group_bravo_inventory_barcode_binder'
-        ):
-            raise AccessError(_('You do not have permission to bind product barcodes.'))
+        if not self._can_bind():
+            raise AccessError(_('Only an inventory manager or a user with barcode binding permission can bind product barcodes.'))
 
     def _require_manager(self):
         if not request.env.user.has_group('stock.group_stock_manager'):
@@ -206,7 +209,7 @@ class BravoMobileInventoryController(http.Controller):
                 'success': True,
                 'status': 'not_found',
                 'line': self._line_payload(line),
-                'can_bind': request.env.user.has_group('bravo_mobile_inventory.group_bravo_inventory_barcode_binder'),
+                'can_bind': self._can_bind(),
                 'message': _('Barcode not found.'),
             }
 

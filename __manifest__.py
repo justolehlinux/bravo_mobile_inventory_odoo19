@@ -1,6 +1,6 @@
 {
     'name': 'Bravo Mobile Inventory',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.3',
     'category': 'Inventory/Inventory',
     'summary': 'Fast mobile physical inventory terminal for Bravo Market',
     'description': '''
