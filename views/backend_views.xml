@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bravo_inventory_session_list" model="ir.ui.view">
+        <field name="name">bravo.inventory.session.list</field>
+        <field name="model">bravo.inventory.session</field>
+        <field name="arch" type="xml">
+            <list create="false" delete="false">
+                <field name="name"/>
+                <field name="create_date"/>
+                <field name="user_id"/>
+                <field name="location_id"/>
+                <field name="state" decoration-success="state == 'applied'" decoration-warning="state == 'review'" decoration-muted="state == 'cancelled'"/>
+                <field name="line_count"/>
+                <field name="changed_count"/>
+                <field name="barcode_bound_count"/>
+                <field name="applied_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bravo_inventory_session_form" model="ir.ui.view">
+        <field name="name">bravo.inventory.session.form</field>
+        <field name="model">bravo.inventory.session</field>
+        <field name="arch" type="xml">
+            <form create="false" delete="false">
+                <header>
+                    <button name="action_open_mobile" string="Open Mobile Terminal" type="object" class="oe_highlight"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('cancelled', 'applied')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,review,applied,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="user_id"/>
+                            <field name="location_id"/>
+                        </group>
+                        <group>
+                            <field name="create_date"/>
+                            <field name="applied_at"/>
+                            <field name="applied_by_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lines">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="barcode"/>
+                                    <field name="product_id"/>
+                                    <field name="theoretical_qty"/>
+                                    <field name="counted_qty"/>
+                                    <field name="difference_qty"/>
+                                    <field name="scan_status"/>
+                                    <field name="state"/>
+                                    <field name="barcode_bound_during_session"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bravo_inventory_session" model="ir.actions.act_window">
+        <field name="name">Mobile Count Sessions</field>
+        <field name="res_model">bravo.inventory.session</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_bravo_inventory_mobile" model="ir.actions.act_url">
+        <field name="name">Open Mobile Inventory</field>
+        <field name="url">/mobile/inventory</field>
+        <field name="target">self</field>
+    </record>
+
+    <menuitem id="menu_bravo_inventory_root" name="Bravo Inventory" sequence="60" groups="stock.group_stock_user"/>
+    <menuitem id="menu_bravo_inventory_mobile" name="Mobile Terminal" parent="menu_bravo_inventory_root" action="action_bravo_inventory_mobile" sequence="10" groups="stock.group_stock_user"/>
+    <menuitem id="menu_bravo_inventory_sessions" name="Count Sessions" parent="menu_bravo_inventory_root" action="action_bravo_inventory_session" sequence="20" groups="stock.group_stock_user"/>
+</odoo>
